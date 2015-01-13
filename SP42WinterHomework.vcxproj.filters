@@ -1,0 +1,20 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClCompile Include="C2DPolygon.cpp" />
+    <ClCompile Include="CDirect3DXFile.cpp" />
+    <ClCompile Include="CDirectXGraphics.cpp" />
+    <ClCompile Include="CFont.cpp" />
+    <ClCompile Include="CInput.cpp" />
+    <ClCompile Include="CTextureManager.cpp" />
+    <ClCompile Include="CMain.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="C2DPolygon.h" />
+    <ClInclude Include="CDirect3DXFile.h" />
+    <ClInclude Include="CDirectxGraphics.h" />
+    <ClInclude Include="CFont.h" />
+    <ClInclude Include="CInput.h" />
+    <ClInclude Include="CTextureManager.h" />
+  </ItemGroup>
+</Project>
