@@ -10,8 +10,8 @@ extern CDirectXGraphics	g_DXGrobj;
 //---------------------------------------------------------------------------------
 CFont::CFont():
 	m_iFontSize(0)
-	, screen_x(800)
-	, screen_y(600)
+	, screen_x(1600)
+	, screen_y(900)
 {
 	m_mapTexture.clear();
 	LPD3DXBUFFER pErr=NULL;

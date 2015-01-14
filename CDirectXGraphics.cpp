@@ -21,9 +21,12 @@ bool CDirectXGraphics::Init(HWND hwnd,int fullscreenflag,int width,int height){
 	}
 
 	//　アダプタの現在のディスプレイモードを取得する
-	hr = m_lpd3d->GetAdapterDisplayMode(m_adapter,&m_disp);	
+	UINT adapterCnt = m_lpd3d->GetAdapterCount();
+	hr = m_lpd3d->GetAdapterDisplayMode(m_adapter,&m_disp);
 	if(hr!=D3D_OK)
 	    return false;
+	
+	m_lpd3d->GetAdapterIdentifier( m_adapter, D3DENUM_WHQL_LEVEL, &m_adapterInfo );
 
 	memset(&m_d3dpp,0,sizeof(m_d3dpp));					// ゼロクリア
 	m_d3dpp.BackBufferFormat = m_disp.Format;			// 現在のビット深度

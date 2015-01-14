@@ -8,6 +8,8 @@
     <ClCompile Include="CInput.cpp" />
     <ClCompile Include="CTextureManager.cpp" />
     <ClCompile Include="CMain.cpp" />
+    <ClCompile Include="CInfo.cpp" />
+    <ClCompile Include="CMenu.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="C2DPolygon.h" />
@@ -16,5 +18,8 @@
     <ClInclude Include="CFont.h" />
     <ClInclude Include="CInput.h" />
     <ClInclude Include="CTextureManager.h" />
+    <ClInclude Include="CInfo.h" />
+    <ClInclude Include="CMenu.h" />
+    <ClInclude Include="CMain.h" />
   </ItemGroup>
 </Project>

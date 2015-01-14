@@ -1,78 +1,5 @@
-#include <windows.h>
-#include <stdio.h>
-#include <process.h>	
-#include <memory>
-#include <list>
-#include "CDirectXGraphics.h" 
-#include "CTextureManager.h"
-#include "CInput.h"
-#include "CDirect3DXFile.h"
-#include "CFont.h"
-#include "C2DPolygon.h"
-
-// マクロの定義
-#define NAME	"win32A"
-#define TITLE	"SP42WinterHomework"
-
-#define		SCREEN_X		1600
-#define		SCREEN_Y		900
-#define		FULLSCREEN		0				// フルスクリーンフラグ
-
-// 頂点フォーマット定義
-#define		D3DFVF_CUSTOMVERTEX	   ( D3DFVF_XYZ | D3DFVF_NORMAL | D3DFVF_TEX0  )
-
-// リンクライブラリの設定
-#pragma comment(lib, "d3d9.lib")			// リンク対象ライブラリにd3d9.libを追加
-#pragma comment(lib, "d3dx9.lib")			// リンク対象ライブラリにd3dx9.libを追加
-#pragma comment(lib, "winmm.lib")			// リンク対象ライブラリにwinmm.libを追加
-
-// メモリリーク検出
-#if _DEBUG
-#define _CRTDBG_MAP_ALLOC
-#include <crtdbg.h>
-#define new new(_NORMAL_BLOCK, __FILE__, __LINE__)
-#endif
-
-// プロトタイプ宣言
-LRESULT CALLBACK WndProc(HWND hWnd,			// ウインドウメッセージ関数
-			 UINT message, 
-			 WPARAM wParam, 
-			 LPARAM lParam);
-
-unsigned int   WINAPI GameMain(void  *);							// ゲームメイン関数関数
-bool	GameInit(HINSTANCE hinst,HWND hwnd,int width,int height);	// ゲームの初期処理
-void	GameExit();													// ゲームの終了処理
-void	CALLBACK TimerProc(UINT ,UINT,DWORD,DWORD,DWORD);			// タイマ処理
-
-std::shared_ptr<CFont> pFont;					// フォントの作成
-std::shared_ptr<C2DPolygon> m_pPETexture;		// 2Dポリゴン表示クラス
-
-// モデルフォルダパス
-const std::string  modelPath = "resource/model/";
-// モデルファイルパス
-const std::string xFileName[] = {
-	"100x100plane.x",
-	//"maid_pose.x",
-};
-
-// グローバル変数
-CDirectXGraphics	g_DXGrobj;								// ＤＩＲＥＣＴＸ　ＧＲＡＰＨＩＣＳ　オブジェクト		
-LPD3DXEFFECT		g_pEffect = nullptr;					// エフェクトオブジェクト
-std::list<std::shared_ptr<CDirect3DXFile>>		g_pXfile;	// Xファイルマネージャ
-std::shared_ptr<CInput>				g_pInput;				// 入力クラス
-std::shared_ptr<CTextureManager>	g_pTextureManager;		// テクスチャマネージャ
-
-// 3D描画用の行列
-D3DXMATRIX	g_MatView;				// カメラ行列
-D3DXMATRIX	g_MatProjection;		// プロジェクション変換行列
-D3DXMATRIX	g_MatWorld;				// ワールド変換行列
-
-// ゲームメインスレッド関連
-HANDLE			g_hEventHandle;		// イベントハンドル
-int				g_timerid=0;		// タイマＩＤ
-bool			g_EndFlag=false;	// 終了フラグ
-HANDLE			g_hThread;			// スレッドのハンドル値
-unsigned int	g_dwThreadId;		// スレッドＩＤ
+#define _MAIN_MODULE_
+#include "CMain.h"
 
 //////////////////////////
 // ＷＩＮＭＡＩＮ関数	//
@@ -203,30 +130,7 @@ unsigned int	WINAPI GameMain(void* p1)
 			xfile->Draw( g_pEffect );
 		}
 
-		pFont->PrintChar( "ポストエフェクトとかそういうやつ", 10, 10 ,D3DCOLOR_XRGB( 255,0,255) );
-		char buf[256];
-		pFont->PrintChar( "操作方法", 10, 200 ,D3DCOLOR_ARGB( 255,255,0,0) );
-		pFont->PrintChar( "↑↓:Z軸移動", 10, 220 ,D3DCOLOR_ARGB( 128,255,255,0) );
-		pFont->PrintChar( "←→:Y軸回転", 10, 240 ,D3DCOLOR_ARGB( 128,255,255,0) );
-		pFont->PrintChar( "WS:Y軸移動", 10, 260 ,D3DCOLOR_ARGB( 128,255,255,0) );
-		pFont->PrintChar( "H:ハイトマップ表示/非表示", 10, 300 ,D3DCOLOR_ARGB( 128,255,255,0) );
-		pFont->PrintChar( "F1F2:ハイトマップの強度変更", 10, 320 ,D3DCOLOR_ARGB( 128,255,255,0) );
-		pFont->PrintChar( "G:ガウスフィルターのOn/Off", 10, 360, D3DCOLOR_ARGB( 128, 255, 255, 0 ) );
-		pFont->PrintChar( "F3F4:ガウスフィルターの強度変更", 10, 380 ,D3DCOLOR_ARGB( 128,255,255,0) );
-		pFont->PrintChar( "M:モザイクフィルターのOn/Off", 10, 420 ,D3DCOLOR_ARGB( 128,255,255,0) );
-		pFont->PrintChar( "F5F6:モザイクフィルターの強度変更", 10, 440 ,D3DCOLOR_ARGB( 128,255,255,0) );
-		pFont->PrintChar( "F7F8:HDRの強度変更", 10, 480, D3DCOLOR_ARGB( 128, 255, 255, 0 ) );
-		pFont->PrintChar( "Z:被写界深度On/Off", 10, 520, D3DCOLOR_ARGB( 128, 255, 255, 0 ) );
-		
-		// 右上に表示
-		pFont->PrintChar( "デバイス情報", 500, 50, D3DCOLOR_ARGB( 255, 255, 0, 0 ) );
-		// マルチレンダリングターゲットの最大数
-		D3DCAPS9 Caps;
-		g_DXGrobj.GetDXDevice()->GetDeviceCaps( &Caps );
-		sprintf_s( buf, "最大マルチレンダリングターゲット:%d", Caps.NumSimultaneousRTs );
-		pFont->PrintChar( buf, 500, 70 );
-		sprintf_s( buf, "最大テクスチャ解像度:%d×%d", Caps.MaxTextureWidth,Caps.MaxTextureHeight );
-		pFont->PrintChar( buf, 500, 90 );
+		pInfo->Draw();
 
 		// 描画コマンドをグラフィックスカードへ発行
 		g_DXGrobj.GetDXDevice()->EndScene();
@@ -340,13 +244,7 @@ bool GameInit(HINSTANCE hinst,HWND hwnd,int width,int height){
 	}
 
 	// フォントの作成
-	pFont = std::make_shared<CFont>();
-	const string fontPath = "resource/font/";	// フォント関係のフォルダパス
-	pFont->Load( (fontPath + "ASCII.txt").c_str() );
-	pFont->Load( (fontPath + "文字データ.txt" ).c_str() );
-	pFont->CreateTexture(16,"しねきゃぷしょん",(fontPath + "cinecaption227.ttf").c_str());
-	//pFont->CreateTexture(16,"吐き溜",(fontPath + "hakidame.ttf").c_str() );
-	//pFont->CreateTexture( 16, "怨霊", (fontPath + "onryou.TTF").c_str() );
+	pInfo = std::make_shared<CInfo>();
 
 	// 2Dポリゴンの作成
 	/*m_pPETexture = std::make_shared<C2DPolygon>();
