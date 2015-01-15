@@ -1,5 +1,6 @@
 #include "CInfo.h"
 #include "CDirectxGraphics.h"
+#include <string>
 
 extern CDirectXGraphics g_DXGrobj;
 
@@ -18,8 +19,8 @@ CInfo::CInfo()
 	m_pDeviceInfo->Load( ( fontPath + "ASCII.txt" ).c_str() );
 	m_pDeviceInfo->Load( ( fontPath + "文字データ.txt" ).c_str() );
 	m_pDeviceInfo->CreateTexture( 16, "しねきゃぷしょん", ( fontPath + "cinecaption227.ttf" ).c_str() );
-	m_pDeviceInfo->SetPitch( 0.0f );
-	m_pDeviceInfo->SetPosition( 480, 10 );
+	m_pDeviceInfo->SetPitch( 20.0f );
+	m_pDeviceInfo->SetPosition( 10, 100 );
 	SetDeviceInfo();
 
 	// 操作説明の初期化
@@ -27,8 +28,8 @@ CInfo::CInfo()
 	m_pUserGuide->Load( ( fontPath + "ASCII.txt" ).c_str() );
 	m_pUserGuide->Load( ( fontPath + "文字データ.txt" ).c_str() );
 	m_pUserGuide->CreateTexture( 16, "しねきゃぷしょん", ( fontPath + "cinecaption227.ttf" ).c_str() );
-	m_pUserGuide->SetPitch( 10.0f );
-	m_pUserGuide->SetPosition( 10, 200 );
+	m_pUserGuide->SetPitch( 20.0f );
+	m_pUserGuide->SetPosition( 10, 400 );
 	SetUserGuide();
 }
 
@@ -59,22 +60,21 @@ void CInfo::SetTitle(string str)
 //======================================================
 void CInfo::SetDeviceInfo()
 {
-	char buf[256];
-
 	m_pDeviceInfo->PushMenu( "デバイス情報" );
 	// マルチレンダリングターゲットの最大数
 	D3DCAPS9 Caps;
 	g_DXGrobj.GetDXDevice()->GetDeviceCaps( &Caps );
-	sprintf_s( buf, "最大マルチレンダリングターゲット:%d", Caps.NumSimultaneousRTs );
-	m_pDeviceInfo->PushMenu( buf );
-	sprintf_s( buf, "最大テクスチャ解像度:%d×%d", Caps.MaxTextureWidth, Caps.MaxTextureHeight );
-	m_pDeviceInfo->PushMenu( buf );
-	sprintf_s( buf, "バックバッファサイズ:%d×%d", g_DXGrobj.GetDXD3dpp().BackBufferWidth, g_DXGrobj.GetDXD3dpp().BackBufferHeight );
-	m_pDeviceInfo->PushMenu( buf );
-	sprintf_s( buf, "利用可能VRAM:%dMB", g_DXGrobj.GetDXDevice()->GetAvailableTextureMem() / 1024 / 1024 );
-	m_pDeviceInfo->PushMenu( buf );
-	sprintf_s( buf, "HAL:%s", g_DXGrobj.GetDXAdapter().Description );
-	m_pDeviceInfo->PushMenu( buf );
+	
+	sprintf_s( buf[0], "最大マルチレンダリングターゲット:%d", Caps.NumSimultaneousRTs );
+	m_pDeviceInfo->PushMenu( buf[0] );
+	sprintf_s( buf[1], "最大テクスチャ解像度:%d×%d", Caps.MaxTextureWidth, Caps.MaxTextureHeight );
+	m_pDeviceInfo->PushMenu( buf[1] );
+	sprintf_s( buf[2], "バックバッファサイズ:%d×%d", g_DXGrobj.GetDXD3dpp().BackBufferWidth, g_DXGrobj.GetDXD3dpp().BackBufferHeight );
+	m_pDeviceInfo->PushMenu( buf[2] );
+	sprintf_s( buf[3], "利用可能VRAM:%dMB", g_DXGrobj.GetDXDevice()->GetAvailableTextureMem() / 1024 / 1024 );
+	m_pDeviceInfo->PushMenu( buf[3] );
+	sprintf_s( buf[4], "HAL:%s", g_DXGrobj.GetDXAdapter().Description );
+	m_pDeviceInfo->PushMenu( buf[4] );
 }
 
 //======================================================
@@ -101,7 +101,7 @@ void CInfo::SetUserGuide()
 //======================================================
 void CInfo::Draw()
 {
-	m_pTitle->PrintChar( m_sTitle.c_str(), 10, 10, D3DCOLOR_XRGB( 255, 0, 255 ) );
+	m_pTitle->PrintChar( m_sTitle.c_str(), 600, 10, D3DCOLOR_XRGB( 255, 0, 255 ) );
 	m_pDeviceInfo->Draw();
 	m_pUserGuide->Draw();
 }

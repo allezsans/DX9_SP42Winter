@@ -5,7 +5,10 @@
 
 class CInfo
 {
+	char buf[5][256];					// 情報バッファ
+
 	string m_sTitle;				// タイトル
+
 
 	shared_ptr<CFont> m_pTitle;		// タイトル文字
 	shared_ptr<CMenu> m_pDeviceInfo;// デバイス情報
