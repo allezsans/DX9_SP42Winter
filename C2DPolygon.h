@@ -10,7 +10,7 @@
 #include <list>
 using namespace std;
 
-typedef list<LPDIRECT3DTEXTURE9> MYTEX;
+typedef list<IDirect3DBaseTexture9*> MYTEX;
 
 class CCamera;
 
@@ -64,7 +64,7 @@ public:
 	void GaussWeight( float dispersion );
 
 	void Load(const LPSTR pFileName);			// テクスチャのロード
-	void Load(LPDIRECT3DTEXTURE9 pTex);			// テクスチャのロード
+	void Load( IDirect3DBaseTexture9* pTex );			// テクスチャのロード
 
 	void Draw(SHADERTYPE ShaderFlg = eNORMAL,D3DCOLOR color = 0xffffffff);		// ポリゴン表示
 

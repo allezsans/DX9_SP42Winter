@@ -119,16 +119,39 @@ unsigned int	WINAPI GameMain(void* p1)
 		// キー入力の更新
 		g_pInput->UpdateInput();
 
+		D3DXMATRIXA16 workRotateMat;
+		D3DXMatrixIdentity( &workRotateMat );
+		if( g_pInput->GetKeyboardPress( DIK_UP ) ) {
+			D3DXMatrixRotationX( &workRotateMat, 0.1f );
+		}
+		if( g_pInput->GetKeyboardPress( DIK_DOWN ) ) {
+			D3DXMatrixRotationX( &workRotateMat, -0.1f );
+		}
+		D3DXMatrixMultiply( &g_MatWorld, &g_MatWorld, &workRotateMat );
+
+		if( g_pInput->GetKeyboardPress( DIK_RIGHT ) ) {
+			D3DXMatrixRotationY( &workRotateMat, 0.1f );
+		}
+		if( g_pInput->GetKeyboardPress( DIK_LEFT ) ) {
+			D3DXMatrixRotationY( &workRotateMat, -0.1f );
+		}
+
+		D3DXMatrixMultiply( &g_MatWorld, &g_MatWorld ,&workRotateMat );
+
+		RenderSceneIntoCubeMap( g_DXGrobj.GetDXDevice(),g_spendTime );
+
 		// ターゲットバッファのクリア、Ｚバッファのクリア
-		g_DXGrobj.GetDXDevice()->Clear( 0, NULL, D3DCLEAR_TARGET | D3DCLEAR_ZBUFFER, D3DCOLOR_XRGB( 0, 0, 0 ), 1.0f, 0 );
+		g_DXGrobj.GetDXDevice()->Clear( 0, NULL, D3DCLEAR_TARGET | D3DCLEAR_ZBUFFER, D3DCOLOR_XRGB( 255, 0, 0 ), 1.0f, 0 );
 
 		// 描画の開始をＤＩＲＥＣＴＸに通知
 		g_DXGrobj.GetDXDevice()->BeginScene();
 
 		// Xfileを描画
-		for( const auto& xfile : g_pXfile ) {
+		/*for( const auto& xfile : g_pXfile ) {
 			xfile->Draw( g_pEffect );
-		}
+		}*/
+
+		RenderScene( g_DXGrobj.GetDXDevice(), &g_MatView, &g_MatProjection, &g_pTech, true, g_spendTime );
 
 		pInfo->Draw();
 
@@ -140,8 +163,161 @@ unsigned int	WINAPI GameMain(void* p1)
 		if(hr!=D3D_OK){
 			g_DXGrobj.GetDXDevice()->Reset(&g_DXGrobj.GetDXD3dpp());
 		}
+
+		g_spendTime += 1/60.0f;
 	}
 	return 1;
+}
+
+//--------------------------------------------------------------------------------------
+// 環境キューブマップのレンダリング
+//--------------------------------------------------------------------------------------
+void RenderSceneIntoCubeMap( IDirect3DDevice9* pd3dDevice, double fTime )
+{
+	HRESULT hr;
+
+	// The projection matrix has a FOV of 90 degrees and asp ratio of 1
+	D3DXMATRIXA16 mProj;
+	D3DXMatrixPerspectiveFovLH( &mProj, D3DX_PI * 0.5f, 1.0f, 0.01f, 100.0f );
+
+	D3DXMATRIXA16 mViewDir( g_MatView );
+	mViewDir._41 = mViewDir._42 = mViewDir._43 = 0.0f;
+
+	LPDIRECT3DSURFACE9 pRTOld = NULL;
+	pd3dDevice->GetRenderTarget( 0, &pRTOld );
+	LPDIRECT3DSURFACE9 pDSOld = NULL;
+	if( SUCCEEDED( pd3dDevice->GetDepthStencilSurface( &pDSOld ) ) ) {
+		pd3dDevice->SetDepthStencilSurface( g_pDepthCube );
+	}
+
+	D3DVIEWPORT9 OldViewport, Viewport;
+	pd3dDevice->GetViewport( &OldViewport );
+	Viewport.Height = 256;
+	Viewport.Width = 256;
+	Viewport.MaxZ = 1.0f;
+	Viewport.MinZ = 0.0f;
+	Viewport.X = 0;
+	Viewport.Y = 0;
+	pd3dDevice->SetViewport( &Viewport );
+
+	for( int nCube = 0; nCube < 1; ++nCube )
+		for( int nFace = 0; nFace < 6; ++nFace ) {
+			LPDIRECT3DSURFACE9 pSurf;
+
+			g_apCubeMap->GetCubeMapSurface( ( D3DCUBEMAP_FACES ) nFace, 0, &pSurf );
+			pd3dDevice->SetRenderTarget( 0, pSurf );
+			SAFE_RELEASE( pSurf );
+
+			D3DXMATRIXA16 mView = GetCubeMapViewMatrix( nFace );
+			D3DXMatrixMultiply( &mView, &mViewDir, &mView );
+
+			pd3dDevice->Clear( 0L, NULL, D3DCLEAR_ZBUFFER, D3DCOLOR_XRGB( 255, 0, 0 ), 1.0f, 0L );
+
+			// Begin the scene
+			if( SUCCEEDED( pd3dDevice->BeginScene() ) ) {
+				RenderScene( pd3dDevice, &mView, &mProj, &g_pTech, false, fTime );
+				// End the scene.
+				pd3dDevice->EndScene();
+			}
+		}
+
+	// Restore depth-stencil buffer and render target
+	if( pDSOld ) {
+		pd3dDevice->SetDepthStencilSurface( pDSOld );
+		SAFE_RELEASE( pDSOld );
+	}
+	pd3dDevice->SetRenderTarget( 0, pRTOld );
+	SAFE_RELEASE( pRTOld );
+
+	pd3dDevice->SetViewport( &OldViewport );
+}
+
+//--------------------------------------------------------------------------------------
+// Renders the scene with a specific view and projection matrix.
+//--------------------------------------------------------------------------------------
+void RenderScene( IDirect3DDevice9* pd3dDevice, const D3DXMATRIX* pmView, const D3DXMATRIX* pmProj,
+	CTechniqueGroup* pTechGroup, bool bRenderEnvMappedMesh, double fTime )
+{
+	HRESULT hr;
+	UINT p, cPass;
+	D3DXMATRIXA16 mWorldView;
+
+	g_pEffect->SetMatrix( "g_mProj", pmProj );
+
+	// Write camera-space light positions to effect
+	D3DXVECTOR4 avLightPosView[NUM_LIGHTS];
+	for( int i = 0; i < NUM_LIGHTS; ++i ) {
+		// Animate the lights
+		float fDisp = ( 1.0f + cosf( fmodf( ( float ) fTime, D3DX_PI ) ) ) * 0.5f * g_aLights[i].fMoveDist; // Distance to move
+		D3DXVECTOR4 vMove = g_aLights[i].vMoveDir * fDisp;  // In vector form
+		D3DXMatrixTranslation( &g_aLights[i].mWorking, vMove.x, vMove.y, vMove.z ); // Matrix form
+		D3DXMatrixMultiply( &g_aLights[i].mWorking, &g_aLights[i].mWorld, &g_aLights[i].mWorking );
+		vMove += g_aLights[i].vPos;  // Animated world coordinates
+		D3DXVec4Transform( &avLightPosView[i], &vMove, pmView );
+	}
+	g_pEffect->SetVectorArray( "g_vLightPosView", avLightPosView, NUM_LIGHTS );
+
+	// Xfileを描画
+	auto work = g_pXfile.begin();
+	if( bRenderEnvMappedMesh ) {
+		//g_pEffect->SetTechnique( "RenderHDREnvMap" );
+
+		D3DXMatrixMultiply( &mWorldView, &g_MatWorld, &g_MatView );
+		D3DXMatrixMultiply( &mWorldView, &mWorldView, pmView );
+		g_pEffect->SetMatrix( "g_mWorldView", &mWorldView );
+
+		g_pEffect->SetTexture( "g_txCubeMap", g_apCubeMap );
+
+		//work++;
+		(*work)->Draw( g_pEffect,"RenderHDREnvMap" );
+		
+	}
+	
+	// 部屋を描画
+	//g_pEffect->SetTechnique( "RenderScene" );
+	g_pEffect->SetMatrix( "g_mWorldView", pmView );
+	
+	work++;
+	(*work)->Draw( g_pEffect,"RenderScene" );
+}
+
+D3DXMATRIX GetCubeMapViewMatrix( DWORD dwFace )
+{
+	D3DXVECTOR3 vEyePt = D3DXVECTOR3( 0.0f, 0.0f, 0.0f );
+	D3DXVECTOR3 vLookDir;
+	D3DXVECTOR3 vUpDir;
+
+	switch( dwFace ) {
+		case D3DCUBEMAP_FACE_POSITIVE_X:
+			vLookDir = D3DXVECTOR3( 1.0f, 0.0f, 0.0f );
+			vUpDir = D3DXVECTOR3( 0.0f, 1.0f, 0.0f );
+			break;
+		case D3DCUBEMAP_FACE_NEGATIVE_X:
+			vLookDir = D3DXVECTOR3( -1.0f, 0.0f, 0.0f );
+			vUpDir = D3DXVECTOR3( 0.0f, 1.0f, 0.0f );
+			break;
+		case D3DCUBEMAP_FACE_POSITIVE_Y:
+			vLookDir = D3DXVECTOR3( 0.0f, 1.0f, 0.0f );
+			vUpDir = D3DXVECTOR3( 0.0f, 0.0f, -1.0f );
+			break;
+		case D3DCUBEMAP_FACE_NEGATIVE_Y:
+			vLookDir = D3DXVECTOR3( 0.0f, -1.0f, 0.0f );
+			vUpDir = D3DXVECTOR3( 0.0f, 0.0f, 1.0f );
+			break;
+		case D3DCUBEMAP_FACE_POSITIVE_Z:
+			vLookDir = D3DXVECTOR3( 0.0f, 0.0f, 1.0f );
+			vUpDir = D3DXVECTOR3( 0.0f, 1.0f, 0.0f );
+			break;
+		case D3DCUBEMAP_FACE_NEGATIVE_Z:
+			vLookDir = D3DXVECTOR3( 0.0f, 0.0f, -1.0f );
+			vUpDir = D3DXVECTOR3( 0.0f, 1.0f, 0.0f );
+			break;
+	}
+
+	// Set the view transform for this cubemap surface
+	D3DXMATRIXA16 mView;
+	D3DXMatrixLookAtLH( &mView, &vEyePt, &vLookDir, &vUpDir );
+	return mView;
 }
 
 ////////////////////////////////////////////////////////////////
@@ -180,6 +356,7 @@ LRESULT WINAPI WndProc(HWND hwnd, 				// ウインドウハンドル値
 bool GameInit(HINSTANCE hinst,HWND hwnd,int width,int height){
 
 	bool		sts;
+	HRESULT hr;
 
 	// ＤｉｒｅｃｔＸ　Ｇｒａｐｈｉｃｓオブジェクト初期化
 	sts = g_DXGrobj.Init(hwnd,FULLSCREEN,width,height);
@@ -190,7 +367,7 @@ bool GameInit(HINSTANCE hinst,HWND hwnd,int width,int height){
 
 	// カメラ変換行列作成
 	D3DXMatrixLookAtLH(&g_MatView,
-						&D3DXVECTOR3( 0.0f, 2.0f, -5.0f ),						// 視点
+						&D3DXVECTOR3( 0.0f, 0.0f, -2.0f ),  // 視点
 						&D3DXVECTOR3(0.0f,0.0f,0.0f),		// 注視点
 						&D3DXVECTOR3(0.0f,1.0f,0.0f));		// 上向き
 
@@ -211,7 +388,7 @@ bool GameInit(HINSTANCE hinst,HWND hwnd,int width,int height){
 	LPD3DXBUFFER pErr = nullptr;		// エラー受け取りバッファ
 	if( FAILED( D3DXCreateEffectFromFile( 
 		g_DXGrobj.GetDXDevice(),
-		"shader/basic.fx",
+		"shader/HDRCubeMap.fx",
 		NULL,
 		NULL,
 		NULL,
@@ -241,17 +418,82 @@ bool GameInit(HINSTANCE hinst,HWND hwnd,int width,int height){
 			return false;
 		}
 		++no;
+	}	
+
+	// ライトの設定
+	// Set the light positions
+	g_aLights[0].vPos = D3DXVECTOR4( -3.5f, 2.3f, -4.0f, 1.0f );
+	g_aLights[0].vMoveDir = D3DXVECTOR4( 0.0f, 0.0f, 1.0f, 0.0f );
+	g_aLights[0].fMoveDist = 8.0f;
+
+	g_aLights[1].vPos = D3DXVECTOR4( 3.5f, 2.3f, 4.0f, 1.0f );
+	g_aLights[1].vMoveDir = D3DXVECTOR4( 0.0f, 0.0f, -1.0f, 0.0f );
+	g_aLights[1].fMoveDist = 8.0f;
+
+	g_aLights[2].vPos = D3DXVECTOR4( -3.5f, 2.3f, 4.0f, 1.0f );
+	g_aLights[2].vMoveDir = D3DXVECTOR4( 1.0f, 0.0f, 0.0f, 0.0f );
+	g_aLights[2].fMoveDist = 7.0f;
+
+	g_aLights[3].vPos = D3DXVECTOR4( 3.5f, 2.3f, -4.0f, 1.0f );
+	g_aLights[3].vMoveDir = D3DXVECTOR4( -1.0f, 0.0f, 0.0f, 0.0f );
+	g_aLights[3].fMoveDist = 7.0f;
+
+	g_vLightIntensity = D3DXVECTOR4( 24.0f, 24.0f, 24.0f, 24.0f );
+	g_fReflectivity = 0.4f;
+
+	// Initialize reflectivity
+	g_pEffect->SetFloat( "g_fReflectivity", g_fReflectivity );
+
+	// Initialize light intensity
+	g_pEffect->SetVector( "g_vLightIntensity", &g_vLightIntensity );
+
+	D3DXMATRIXA16 mWorld, m;
+	for(int i = 0; i < NUM_LIGHTS; ++i ) {
+		D3DXMatrixTranslation( &m, g_aLights[i].vPos.x,
+			g_aLights[i].vPos.y,
+			g_aLights[i].vPos.z );
+		D3DXMatrixMultiply( &g_aLights[i].mWorld, &mWorld, &m );
 	}
 
-	// フォントの作成
-	pInfo = std::make_shared<CInfo>();
+	// 髑髏のワールド座標設定
+	D3DXMatrixIdentity( &g_MatWorld );
+	g_DXGrobj.GetDXDevice()->SetTransform( D3DTS_WORLD, &g_MatWorld );
+	g_MatWorld._11 = g_MatWorld._22 = g_MatWorld._33 = 1.0f;
+	
+	// キューブマップの作成
+	hr = g_DXGrobj.GetDXDevice()->CreateCubeTexture( 
+		256,
+		1,
+		D3DUSAGE_RENDERTARGET,
+		D3DFMT_A16B16G16R16F,
+		D3DPOOL_DEFAULT,
+		&g_apCubeMap,
+		NULL );
 
-	// 2Dポリゴンの作成
-	/*m_pPETexture = std::make_shared<C2DPolygon>();
-	m_pPETexture->Load( g_pTexture );
-	m_pPETexture->SetTexNo( 0 );
-	m_pPETexture->SetSize( SCREEN_X, SCREEN_Y );
-	m_pPETexture->SetPos( 0, 0 );*/
+	if( FAILED( hr ) ) {
+		g_DXGrobj.GetDXDevice()->CreateCubeTexture(
+			256,
+			1,
+			D3DUSAGE_RENDERTARGET,
+			D3DFMT_G16R16F,
+			D3DPOOL_DEFAULT,
+			&g_apCubeMap,
+			NULL );
+	}
+
+	// レンダリングサーフェスの作成
+	g_DXGrobj.GetDXDevice()->CreateDepthStencilSurface(
+		256,
+		256,
+		g_DXGrobj.GetDXD3dpp().AutoDepthStencilFormat,
+		D3DMULTISAMPLE_NONE,
+		0,
+		TRUE,
+		&g_pDepthCube,
+		NULL );
+
+	// デバッグ用情報クラスの作成
+	pInfo = std::make_shared<CInfo>();
 
 	// イベントハンドル生成
 	g_hEventHandle=CreateEvent(NULL,false,false,NULL);

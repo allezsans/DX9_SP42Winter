@@ -1,7 +1,10 @@
 #include "CInfo.h"
+#include "C2DPolygon.h"
 #include "CDirectxGraphics.h"
 #include <string>
 
+extern C2DPolygon* g_Tex;
+extern IDirect3DCubeTexture9* g_apCubeMap;
 extern CDirectXGraphics g_DXGrobj;
 
 CInfo::CInfo()
@@ -11,15 +14,15 @@ CInfo::CInfo()
 	m_pTitle = std::make_shared<CFont>();
 	m_pTitle->Load( ( fontPath + "ASCII.txt" ).c_str() );
 	m_pTitle->Load( ( fontPath + "文字データ.txt" ).c_str() );
-	m_pTitle->CreateTexture( 32, "しねきゃぷしょん", ( fontPath + "cinecaption227.ttf" ).c_str() );
+	m_pTitle->CreateTexture( 64, "しねきゃぷしょん", ( fontPath + "cinecaption227.ttf" ).c_str() );
 	SetTitle( "SP42冬季シェーダー課題" );
 
 	// デバイス情報の初期化
 	m_pDeviceInfo = std::make_shared<CMenu>();
 	m_pDeviceInfo->Load( ( fontPath + "ASCII.txt" ).c_str() );
 	m_pDeviceInfo->Load( ( fontPath + "文字データ.txt" ).c_str() );
-	m_pDeviceInfo->CreateTexture( 16, "しねきゃぷしょん", ( fontPath + "cinecaption227.ttf" ).c_str() );
-	m_pDeviceInfo->SetPitch( 20.0f );
+	m_pDeviceInfo->CreateTexture( 32, "しねきゃぷしょん", ( fontPath + "cinecaption227.ttf" ).c_str() );
+	m_pDeviceInfo->SetPitch( 10.0f );
 	m_pDeviceInfo->SetPosition( 10, 100 );
 	SetDeviceInfo();
 
@@ -27,10 +30,17 @@ CInfo::CInfo()
 	m_pUserGuide = std::make_shared<CMenu>();
 	m_pUserGuide->Load( ( fontPath + "ASCII.txt" ).c_str() );
 	m_pUserGuide->Load( ( fontPath + "文字データ.txt" ).c_str() );
-	m_pUserGuide->CreateTexture( 16, "しねきゃぷしょん", ( fontPath + "cinecaption227.ttf" ).c_str() );
+	m_pUserGuide->CreateTexture( 32, "しねきゃぷしょん", ( fontPath + "cinecaption227.ttf" ).c_str() );
 	m_pUserGuide->SetPitch( 20.0f );
 	m_pUserGuide->SetPosition( 10, 400 );
 	SetUserGuide();
+
+	// 2Dポリゴンの作成
+	g_Tex = new C2DPolygon;
+	g_Tex->SetTexNo( 0 );
+	g_Tex->Load( g_apCubeMap );
+	g_Tex->SetSize( 512, 512 );
+	g_Tex->SetPos( 1600 - 512, 0 );
 }
 
 
@@ -87,9 +97,8 @@ void CInfo::SetDeviceInfo()
 void CInfo::SetUserGuide()
 {
 	m_pUserGuide->PushMenu( "操作方法" );
-	m_pUserGuide->PushMenu( "説明1" );
-	m_pUserGuide->PushMenu( "説明2" );
-	m_pUserGuide->PushMenu( "説明3" );
+	m_pUserGuide->PushMenu( "←→：左右回転" );
+	m_pUserGuide->PushMenu( "↑↓：上下回転" );
 }
 
 //======================================================
@@ -101,7 +110,10 @@ void CInfo::SetUserGuide()
 //======================================================
 void CInfo::Draw()
 {
-	m_pTitle->PrintChar( m_sTitle.c_str(), 600, 10, D3DCOLOR_XRGB( 255, 0, 255 ) );
-	m_pDeviceInfo->Draw();
-	m_pUserGuide->Draw();
+	//g_Tex->Draw();
+
+	m_pTitle->PrintChar( m_sTitle.c_str(), 400, 10, D3DCOLOR_XRGB( 146, 7, 131 ) );
+	//m_pTitle->PrintChar( "キューブ環境マップテクスチャ", 1130, 10, D3DCOLOR_XRGB( 0, 0, 0 ) );
+	m_pDeviceInfo->Draw( D3DCOLOR_XRGB( 0, 104, 183 ) );
+	m_pUserGuide->Draw( D3DCOLOR_XRGB( 0, 0, 0 ) );
 }

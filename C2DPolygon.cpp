@@ -11,8 +11,8 @@ C2DPolygon::C2DPolygon():
 	m_pEffect(NULL),
 	m_pVertexBuffer(NULL),
 	m_iTexNo(0),
-	m_screen_x(800),
-	m_screen_y(600),
+	m_screen_x(1600),
+	m_screen_y(900),
 	m_dispersion_sq(0.1f),
 	m_hdr(0)
 {
@@ -130,7 +130,7 @@ void C2DPolygon::Load(const LPSTR pFileName)
 //--------------------------------------------------------------------------------
 // テクスチャのロード
 //--------------------------------------------------------------------------------
-void C2DPolygon::Load(LPDIRECT3DTEXTURE9 pTex)
+void C2DPolygon::Load( IDirect3DBaseTexture9* pTex )
 {
 	m_pTexture.push_back(pTex);
 }

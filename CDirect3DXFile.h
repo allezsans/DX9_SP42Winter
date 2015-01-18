@@ -30,7 +30,7 @@ public:
 	LPD3DXMESH GetMesh() const;
 	void UnLoadXFile();
 	void Draw(LPDIRECT3DDEVICE9 lpd3ddevice);
-	void Draw( LPD3DXEFFECT pEffect );
+	void Draw( LPD3DXEFFECT pEffect,D3DXHANDLE sTech );
 	void DrawShadow( LPD3DXEFFECT pEffect );
 	void DrawWithAxis(LPDIRECT3DDEVICE9 lpd3ddevice);
 	void DrawAxis(LPDIRECT3DDEVICE9 lpd3ddevice);

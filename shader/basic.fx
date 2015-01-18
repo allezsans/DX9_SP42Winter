@@ -86,13 +86,13 @@ VS_OUT VS(	float4 pos : POSITION,
 // テクスチャある時
 float4 PS(VS_OUT In) : COLOR0{
 	float4 color = In.diffuse * tex2D( tex0, In.tex) * float4(g_LightColor,1.0f) + In.specular;
-	return color;
+	return float4(1.0f,0.0f,0.0f,1.0f);
 }
 
 // テクスチャない時
 float4 PS_NoTexture(VS_OUT In) : COLOR0{
 	float4 color = In.diffuse * tex2D( tex0, In.tex) * float4(g_LightColor,1.0f) + In.specular;
-	return color;
+	return float4(1.0f,0.0f,0.0f,1.0f);
 }
 
 technique basic {

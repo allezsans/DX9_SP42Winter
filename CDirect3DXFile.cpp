@@ -118,30 +118,27 @@ lpd3ddevice :	デバイスオブジェクト
 戻り値
 なし
 ------------------------------*/
-void CDirect3DXFile::Draw( LPD3DXEFFECT pEffect )
+void CDirect3DXFile::Draw( LPD3DXEFFECT pEffect,D3DXHANDLE sTech )
 {
 	unsigned int i;
-	for( i = 0; i < m_nummaterial; i++ ) {
-		float	diffuse[4] = { m_lpmeshmaterials[i].Diffuse.r, m_lpmeshmaterials[i].Diffuse.g, m_lpmeshmaterials[i].Diffuse.b, m_lpmeshmaterials[i].Diffuse.a };
-		float	specular[4] = { m_lpmeshmaterials[i].Specular.r, m_lpmeshmaterials[i].Specular.g, m_lpmeshmaterials[i].Specular.b, m_lpmeshmaterials[i].Specular.a };
-		pEffect->SetFloatArray( "g_Diffuse_mat", diffuse, 4 );			// マテリアルのセット
-		pEffect->SetFloatArray( "g_Specular_mat", specular, 4 );		// マテリアルのセット
-		// テクスチャのセット
-		if( m_lpmeshtextures[i] != nullptr ){
-			pEffect->SetTechnique( "basic" );
-			pEffect->SetTexture( "tex0_data", m_lpmeshtextures[i] );
+	UINT p, passNum = 0;
+	pEffect->SetTechnique(sTech);
+	pEffect->Begin( &passNum, 0 );
+	for( p = 0; p < passNum; ++p ) {
+		pEffect->BeginPass( p );
+		for( i = 0; i < m_nummaterial; i++ ) {
+			float	diffuse[4] = { m_lpmeshmaterials[i].Diffuse.r, m_lpmeshmaterials[i].Diffuse.g, m_lpmeshmaterials[i].Diffuse.b, m_lpmeshmaterials[i].Diffuse.a };
+			pEffect->SetFloatArray( "g_Diffuse_mat", diffuse, 4 );			// マテリアルのセット
+
+			pEffect->SetTexture( "g_txScene", m_lpmeshtextures[i] );
+
+			pEffect->CommitChanges();
+
+			m_lpmesh->DrawSubset( i );
 		}
-		else {
-			pEffect->SetTechnique( "basic_notexture" );
-		}
-		//pEffect->CommitChanges();
-		UINT passNum = 0;
-		pEffect->Begin( 0, 0 );
-		pEffect->BeginPass( 0 );
-		m_lpmesh->DrawSubset( i );
 		pEffect->EndPass();
-		pEffect->End();
 	}
+	pEffect->End();
 }
 
 /*-----------------------------
