@@ -127,7 +127,7 @@ unsigned int	WINAPI GameMain(void* p1)
 		g_DXGrobj.GetDXDevice()->BeginScene();
 
 		// シーンレンダリング
-		RenderScene( g_DXGrobj.GetDXDevice(), &g_MatView, &g_MatProjection, &g_pTech, true, g_spendTime );
+		RenderScene( g_DXGrobj.GetDXDevice(), &g_MatView, &g_MatProjection, true, g_spendTime );
 
 		// デバッグ情報の表示
 		pInfo->Draw();
@@ -243,7 +243,7 @@ void RenderSceneIntoCubeMap( IDirect3DDevice9* pd3dDevice, double fTime )
 			pd3dDevice->Clear( 0L, NULL, D3DCLEAR_ZBUFFER, D3DCOLOR_XRGB( 255, 0, 0 ), 1.0f, 0L );
 
 			if( SUCCEEDED( pd3dDevice->BeginScene() ) ) {
-				RenderScene( pd3dDevice, &mView, &mProj, &g_pTech, false, fTime );
+				RenderScene( pd3dDevice, &mView, &mProj, false, fTime );
 				pd3dDevice->EndScene();
 			}
 		}
@@ -262,8 +262,7 @@ void RenderSceneIntoCubeMap( IDirect3DDevice9* pd3dDevice, double fTime )
 //--------------------------------------------------------------------------------------
 // シーンのレンダリング
 //--------------------------------------------------------------------------------------
-void RenderScene( IDirect3DDevice9* pd3dDevice, const D3DXMATRIX* pmView, const D3DXMATRIX* pmProj,
-	CTechniqueGroup* pTechGroup, bool bRenderEnvMappedMesh, double fTime )
+void RenderScene( IDirect3DDevice9* pd3dDevice, const D3DXMATRIX* pmView, const D3DXMATRIX* pmProj, bool bRenderEnvMappedMesh, double fTime )
 {
 	D3DXMATRIXA16 mWorldView;
 

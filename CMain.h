@@ -65,8 +65,7 @@ bool	GameInit( HINSTANCE hinst, HWND hwnd, int width, int height );	// ƒQ[ƒ€‚Ì
 void	GameExit();													// ƒQ[ƒ€‚ÌI—¹ˆ—
 void	CALLBACK TimerProc( UINT, UINT, DWORD, DWORD, DWORD );			// ƒ^ƒCƒ}ˆ—
 void RenderSceneIntoCubeMap( IDirect3DDevice9* pd3dDevice, double fTime );
-void RenderScene( IDirect3DDevice9* pd3dDevice, const D3DXMATRIX* pmView, const D3DXMATRIX* pmProj,
-	CTechniqueGroup* pTechGroup, bool bRenderEnvMappedMesh, double fTime );
+void RenderScene( IDirect3DDevice9* pd3dDevice, const D3DXMATRIX* pmView, const D3DXMATRIX* pmProj, bool bRenderEnvMappedMesh, double fTime );
 D3DXMATRIX GetCubeMapViewMatrix( DWORD dwFace );
 void InputKeyboard();
 
@@ -89,7 +88,6 @@ const std::string xFileName[] = {
 };
 
 
-
 // ƒOƒ[ƒoƒ‹•Ï”
 GLOBAL CDirectXGraphics	g_DXGrobj;								// ‚c‚h‚q‚d‚b‚s‚w@‚f‚q‚`‚o‚g‚h‚b‚r@ƒIƒuƒWƒFƒNƒg		
 GLOBAL LPD3DXEFFECT		g_pEffect = nullptr;					// ƒGƒtƒFƒNƒgƒIƒuƒWƒFƒNƒg
@@ -101,7 +99,6 @@ GLOBAL float g_fLightIntensity;
 GLOBAL IDirect3DSurface9*	g_pDepthCube;
 GLOBAL IDirect3DCubeTexture9*          g_apCubeMap;
 GLOBAL float g_fReflectivity;
-GLOBAL CTechniqueGroup g_pTech;
 
 // 3D•`‰æ—p‚Ìs—ñ
 GLOBAL D3DXMATRIX	g_MatView;				// ƒJƒƒ‰s—ñ
