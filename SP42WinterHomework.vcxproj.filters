@@ -6,7 +6,6 @@
     <ClCompile Include="CDirectXGraphics.cpp" />
     <ClCompile Include="CFont.cpp" />
     <ClCompile Include="CInput.cpp" />
-    <ClCompile Include="CTextureManager.cpp" />
     <ClCompile Include="CMain.cpp" />
     <ClCompile Include="CInfo.cpp" />
     <ClCompile Include="CMenu.cpp" />
@@ -17,7 +16,6 @@
     <ClInclude Include="CDirectxGraphics.h" />
     <ClInclude Include="CFont.h" />
     <ClInclude Include="CInput.h" />
-    <ClInclude Include="CTextureManager.h" />
     <ClInclude Include="CInfo.h" />
     <ClInclude Include="CMenu.h" />
     <ClInclude Include="CMain.h" />

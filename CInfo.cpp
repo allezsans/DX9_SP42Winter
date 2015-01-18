@@ -6,6 +6,8 @@
 extern C2DPolygon* g_Tex;
 extern IDirect3DCubeTexture9* g_apCubeMap;
 extern CDirectXGraphics g_DXGrobj;
+extern float g_fReflectivity;
+extern float g_fLightIntensity;
 
 CInfo::CInfo()
 {
@@ -14,14 +16,20 @@ CInfo::CInfo()
 	m_pTitle = std::make_shared<CFont>();
 	m_pTitle->Load( ( fontPath + "ASCII.txt" ).c_str() );
 	m_pTitle->Load( ( fontPath + "文字データ.txt" ).c_str() );
-	m_pTitle->CreateTexture( 64, "しねきゃぷしょん", ( fontPath + "cinecaption227.ttf" ).c_str() );
+	m_pTitle->CreateTexture( 64, "S2GP殴り書き", ( fontPath + "nagurip.ttf" ).c_str() );
 	SetTitle( "SP42冬季シェーダー課題" );
+
+	// 変数情報
+	m_pVarInfo = std::make_shared<CFont>();
+	m_pVarInfo->Load( ( fontPath + "ASCII.txt" ).c_str() );
+	m_pVarInfo->Load( ( fontPath + "文字データ.txt" ).c_str() );
+	m_pVarInfo->CreateTexture( 32, "S2GP殴り書き", ( fontPath + "nagurip.ttf" ).c_str() );
 
 	// デバイス情報の初期化
 	m_pDeviceInfo = std::make_shared<CMenu>();
 	m_pDeviceInfo->Load( ( fontPath + "ASCII.txt" ).c_str() );
 	m_pDeviceInfo->Load( ( fontPath + "文字データ.txt" ).c_str() );
-	m_pDeviceInfo->CreateTexture( 32, "しねきゃぷしょん", ( fontPath + "cinecaption227.ttf" ).c_str() );
+	m_pDeviceInfo->CreateTexture( 32, "S2GP殴り書き", ( fontPath + "nagurip.ttf" ).c_str() );
 	m_pDeviceInfo->SetPitch( 10.0f );
 	m_pDeviceInfo->SetPosition( 10, 100 );
 	SetDeviceInfo();
@@ -30,7 +38,7 @@ CInfo::CInfo()
 	m_pUserGuide = std::make_shared<CMenu>();
 	m_pUserGuide->Load( ( fontPath + "ASCII.txt" ).c_str() );
 	m_pUserGuide->Load( ( fontPath + "文字データ.txt" ).c_str() );
-	m_pUserGuide->CreateTexture( 32, "しねきゃぷしょん", ( fontPath + "cinecaption227.ttf" ).c_str() );
+	m_pUserGuide->CreateTexture( 32, "S2GP殴り書き", ( fontPath + "nagurip.ttf" ).c_str() );
 	m_pUserGuide->SetPitch( 20.0f );
 	m_pUserGuide->SetPosition( 10, 400 );
 	SetUserGuide();
@@ -98,7 +106,9 @@ void CInfo::SetUserGuide()
 {
 	m_pUserGuide->PushMenu( "操作方法" );
 	m_pUserGuide->PushMenu( "←→：左右回転" );
-	m_pUserGuide->PushMenu( "↑↓：上下回転" );
+	m_pUserGuide->PushMenu( "↑↓：上下回転" );	
+	m_pUserGuide->PushMenu( "F1F2：ライトの強度" );
+	m_pUserGuide->PushMenu( "F3F4：キューブマップの反射率" );
 }
 
 //======================================================
@@ -111,9 +121,13 @@ void CInfo::SetUserGuide()
 void CInfo::Draw()
 {
 	//g_Tex->Draw();
+	//m_pTitle->PrintChar( "キューブ環境マップテクスチャ", 1130, 10, D3DCOLOR_XRGB( 0, 0, 0 ) );
 
 	m_pTitle->PrintChar( m_sTitle.c_str(), 400, 10, D3DCOLOR_XRGB( 146, 7, 131 ) );
-	//m_pTitle->PrintChar( "キューブ環境マップテクスチャ", 1130, 10, D3DCOLOR_XRGB( 0, 0, 0 ) );
 	m_pDeviceInfo->Draw( D3DCOLOR_XRGB( 0, 104, 183 ) );
-	m_pUserGuide->Draw( D3DCOLOR_XRGB( 0, 0, 0 ) );
+	m_pUserGuide->Draw( D3DCOLOR_XRGB( 128, 196, 36 ) );
+	sprintf_s( varBuf[0], "ライトの強度 %.1f", g_fLightIntensity );
+	m_pVarInfo->PrintChar( varBuf[0], 1100, 100, D3DCOLOR_XRGB( 0, 104, 183 ) );
+	sprintf_s( varBuf[0], "キューブマップの反射率 %.2f", g_fReflectivity );
+	m_pVarInfo->PrintChar( varBuf[0], 1100, 150, D3DCOLOR_XRGB( 0, 104, 183 ) );
 }

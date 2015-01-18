@@ -1,18 +1,12 @@
 //-----------------------------------------------------------------------------
-// File: HDRCubeMap.fx
-//
-// Desc: Effect file for high dynamic range cube mapping sample.
-//
-// Copyright (c) Microsoft Corporation. All rights reserved.
+// HDRキューブマップ
+// Date:2015/1/18
+// Author:K.Ito
 //-----------------------------------------------------------------------------
-
-
-
 
 #ifndef MAX_NUM_LIGHTS
 #define MAX_NUM_LIGHTS 4
 #endif
-
 
 float4x4 g_mWorldView;
 float4x4 g_mProj;
@@ -20,14 +14,9 @@ texture  g_txCubeMap;
 texture  g_txScene;
 float4   g_vLightIntensity = { 15.0f, 15.0f, 15.0f, 1.0f };
 float4   g_Diffuse_mat;
-float4   g_vLightPosView[MAX_NUM_LIGHTS];  // Light positions in view space
-float    g_fReflectivity = 0.4f;                  // Reflectivity value
+float4   g_vLightPosView[MAX_NUM_LIGHTS];  // ビュー空間でのライトの位置
+float    g_fReflectivity;                  // 反射率
 
-
-//-----------------------------------------------------------------------------
-// Sampler: samCubeMap
-// Desc: Process vertex for HDR environment mapping
-//-----------------------------------------------------------------------------
 samplerCUBE g_samCubeMap = 
 sampler_state
 {
@@ -48,56 +37,43 @@ sampler_state
 
 
 //-----------------------------------------------------------------------------
-// Vertex Shader: HDRVertEnvMap
-// Desc: Process vertex for HDR environment mapping
+// 頂点シェーダーHDR環境マッピング
 //-----------------------------------------------------------------------------
 void HDRVertEnvMap( float4 Pos : POSITION,
                     float3 Normal : NORMAL,
                     out float4 oPos : POSITION,
-                    out float3 EnvTex : TEXCOORD0 )
+                    out float3 EnvTex : TEXCOORD0)
 {
     oPos = mul( Pos, g_mWorldView );
 
-    //
-    // Compute normal in camera space
-    //
+    // カメラ空間での法線を計算
     float3 vN = mul( Normal, g_mWorldView );
     vN = normalize( vN );
 
-    //
-    // Obtain the reverse eye vector
-    //
+    // 視点ベクトルを反転させる
     float3 vEyeR = -normalize( oPos );
 
-    //
-    // Compute the reflection vector
-    //
+    // 反射ベクトルの計算
     float3 vRef = 2 * dot( vEyeR, vN ) * vN - vEyeR;
 
-    //
-    // Store the reflection vector in texcoord0
-    //
+    // texcoord0に代入
     EnvTex = vRef;
 
-    //
-    // Apply the projection
-    //
+    // プロジェクションを反映
     oPos = mul( oPos, g_mProj );
 }
 
 
 //-----------------------------------------------------------------------------
-// Pixel Shader: HDRPixEnvMap
-// Desc: Process pixel for HDR environment mapped object
+// ピクセルシェーダーHDR環境マッピング
 //-----------------------------------------------------------------------------
-float4 HDRPixEnvMap( float3 Tex : TEXCOORD0 ) : COLOR
+float4 HDRPixEnvMap( float3 Tex : TEXCOORD0) : COLOR
 {
     return g_fReflectivity * texCUBE( g_samCubeMap, Tex ) * g_Diffuse_mat;
 }
 
 //-----------------------------------------------------------------------------
-// Vertex Shader: HDRVertScene
-// Desc: Process vertex for HDR-enabled scene
+// 頂点シェーダーHDRシーンレンダリング
 //-----------------------------------------------------------------------------
 void HDRVertScene( float4 iPos : POSITION,
                    float3 iNormal : NORMAL,
@@ -107,36 +83,26 @@ void HDRVertScene( float4 iPos : POSITION,
                    out float3 Pos : TEXCOORD1,
                    out float3 Normal : TEXCOORD2 )
 {
-    //
-    // Transform position to view space
-    //
+    // ビュー空間で行列を変換
     oPos = mul( iPos, g_mWorldView );
 
-    //
-    // Also write view position to texcoord1 to do per-pixel lighting
-    //
+    // ピクセルシェーダーに計算結果を渡す
     Pos = oPos;
 
-    //
-    // Transform to screen coord
-    //
+    // スクリーン座標変換
     oPos = mul( oPos, g_mProj );
 
-    //
-    // Transform normal and write to texcoord2 for per-pixel lighting
-    //
+    // 法線を計算
     Normal = normalize( mul( iNormal, (float3x3)g_mWorldView ) );
     
-    //
-    // Propagate texture coord
-    //
+    // テクスチャ座標を渡す
     Tex = iTex;
 }
 
 
 //-----------------------------------------------------------------------------
 // Pixel Shader: HDRPixScene
-// Desc: Process pixel (do per-pixel lighting) for HDR-enabled scene
+// ピクセルシェーダーHDRシーンレンダリング
 //-----------------------------------------------------------------------------
 float4 HDRPixScene( float2 Tex : TEXCOORD0,
                     float3 Pos : TEXCOORD1,
@@ -144,33 +110,22 @@ float4 HDRPixScene( float2 Tex : TEXCOORD0,
 {
     float3 N = normalize( Normal );
 
-    // Variable to save lit value by each light
+    // ライト変数保持用
     float4 vPixValue = (float4)0;
 
-    //
-    // Iterate through each light and apply the light on the pixel
-    //
+    // すべてのライトを反映させる
     for( int LightIndex = 0; LightIndex < MAX_NUM_LIGHTS; ++LightIndex )
     {
-        //
-        // Compute light vector (pixel to light)
-        //
+        // ピクセルからライトへのベクトルを計算
         float3 vRLightVec = (float3)(g_vLightPosView[LightIndex] - Pos);
 
-        //
-        // Find out the light intensity at the vertex based on
-        // N dot L and distance from the light.
-        //
+        // ライトベクトルと法線からピクセルを計算
         float fDiffuse = saturate( dot( normalize( vRLightVec ), N ) );
 
-        //
-        // Attenuation is 1 / D^2. Clamp at 1 to avoid infinity.
-        //
+        // ライトの強度を計算
         float fAttenuation = saturate( 1.0f / dot( vRLightVec, vRLightVec ) );
 
-        //
-        // Compute and add pixel color to final value
-        //
+        // ピクセルに反映
         vPixValue += fDiffuse * fAttenuation;
     }
     return tex2D( g_samScene, Tex ) * vPixValue * g_vLightIntensity;
@@ -178,43 +133,32 @@ float4 HDRPixScene( float2 Tex : TEXCOORD0,
 
 
 //-----------------------------------------------------------------------------
-// Vertex Shader: HDRVertLight
-// Desc: Process vertex for light objects
+// 頂点シェーダーHDRライトレンダリング
 //-----------------------------------------------------------------------------
 void HDRVertLight( float4 iPos : POSITION,
                    out float4 oPos : POSITION,
                    out float4 Diffuse : TEXCOORD1 )
 {
-    //
-    // Transform position to screen space
-    //
+    // スクリーン座標を計算
     oPos = mul( iPos, g_mWorldView );
     oPos = mul( oPos, g_mProj );
 
-    //
-    // Diffuse color is the light intensity value
-    //
+    // ライトの強度を色に設定
     Diffuse = g_vLightIntensity;
 }
 
-
 //-----------------------------------------------------------------------------
-// Pixel Shader: HDRPixLight
-// Desc: Process pixel for HDR-enabled scene
+// ピクセルシェーダーHDRライトレンダリング
 //-----------------------------------------------------------------------------
 float4 HDRPixLight( float4 Diffuse : TEXCOORD1 ) : COLOR
 {
-    //
-    // Diffuse has the full intensity of the light.
-    // Just output it.
-    //
+    // ライトの強度をそのまま出力
     return Diffuse;
 }
 
 
 //-----------------------------------------------------------------------------
-// Technique: RenderScene
-// Desc: Renders scene objects
+// Technique:　RenderScene
 //-----------------------------------------------------------------------------
 technique RenderScene
 {
@@ -228,7 +172,6 @@ technique RenderScene
 
 //-----------------------------------------------------------------------------
 // Technique: RenderLight
-// Desc: Renders light objects
 //-----------------------------------------------------------------------------
 technique RenderLight
 {
@@ -242,7 +185,6 @@ technique RenderLight
 
 //-----------------------------------------------------------------------------
 // Technique: RenderEnvMesh
-// Desc: Renders the HDR environment-mapped mesh
 //-----------------------------------------------------------------------------
 technique RenderHDREnvMap
 {

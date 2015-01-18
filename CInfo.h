@@ -6,11 +6,13 @@
 class CInfo
 {
 	char buf[5][256];					// 情報バッファ
+	char varBuf[2][256];			// 変数バッファ
 
 	string m_sTitle;				// タイトル
 
 
 	shared_ptr<CFont> m_pTitle;		// タイトル文字
+	shared_ptr<CFont> m_pVarInfo;	// タイトル文字
 	shared_ptr<CMenu> m_pDeviceInfo;// デバイス情報
 	shared_ptr<CMenu> m_pUserGuide;	// 操作説明
 

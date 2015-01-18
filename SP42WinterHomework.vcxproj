@@ -89,7 +89,6 @@
     <ClCompile Include="CInfo.cpp" />
     <ClCompile Include="CInput.cpp" />
     <ClCompile Include="CMenu.cpp" />
-    <ClCompile Include="CTextureManager.cpp" />
     <ClCompile Include="CMain.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -101,7 +100,6 @@
     <ClInclude Include="CInput.h" />
     <ClInclude Include="CMain.h" />
     <ClInclude Include="CMenu.h" />
-    <ClInclude Include="CTextureManager.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

@@ -101,8 +101,6 @@ unsigned int	WINAPI GameMain(void* p1)
 {
 
 	HRESULT		hr;
-	D3DVIEWPORT9 oldView;
-	LPDIRECT3DSURFACE9	oldSurface, oldSurfaceZ;
 
 	while(1){
 		// イベントフラグがセットされるのを待つ　タイムアウト１０００ｍｓ
@@ -116,29 +114,11 @@ unsigned int	WINAPI GameMain(void* p1)
 			continue;
 		}
 
-		// キー入力の更新
-		g_pInput->UpdateInput();
+		// キー入力処理
+		InputKeyboard();
 
-		D3DXMATRIXA16 workRotateMat;
-		D3DXMatrixIdentity( &workRotateMat );
-		if( g_pInput->GetKeyboardPress( DIK_UP ) ) {
-			D3DXMatrixRotationX( &workRotateMat, 0.1f );
-		}
-		if( g_pInput->GetKeyboardPress( DIK_DOWN ) ) {
-			D3DXMatrixRotationX( &workRotateMat, -0.1f );
-		}
-		D3DXMatrixMultiply( &g_MatWorld, &g_MatWorld, &workRotateMat );
-
-		if( g_pInput->GetKeyboardPress( DIK_RIGHT ) ) {
-			D3DXMatrixRotationY( &workRotateMat, 0.1f );
-		}
-		if( g_pInput->GetKeyboardPress( DIK_LEFT ) ) {
-			D3DXMatrixRotationY( &workRotateMat, -0.1f );
-		}
-
-		D3DXMatrixMultiply( &g_MatWorld, &g_MatWorld ,&workRotateMat );
-
-		RenderSceneIntoCubeMap( g_DXGrobj.GetDXDevice(),g_spendTime );
+		// 環境マップレンダリング
+		RenderSceneIntoCubeMap( g_DXGrobj.GetDXDevice(), g_spendTime );
 
 		// ターゲットバッファのクリア、Ｚバッファのクリア
 		g_DXGrobj.GetDXDevice()->Clear( 0, NULL, D3DCLEAR_TARGET | D3DCLEAR_ZBUFFER, D3DCOLOR_XRGB( 255, 0, 0 ), 1.0f, 0 );
@@ -146,13 +126,10 @@ unsigned int	WINAPI GameMain(void* p1)
 		// 描画の開始をＤＩＲＥＣＴＸに通知
 		g_DXGrobj.GetDXDevice()->BeginScene();
 
-		// Xfileを描画
-		/*for( const auto& xfile : g_pXfile ) {
-			xfile->Draw( g_pEffect );
-		}*/
-
+		// シーンレンダリング
 		RenderScene( g_DXGrobj.GetDXDevice(), &g_MatView, &g_MatProjection, &g_pTech, true, g_spendTime );
 
+		// デバッグ情報の表示
 		pInfo->Draw();
 
 		// 描画コマンドをグラフィックスカードへ発行
@@ -170,13 +147,65 @@ unsigned int	WINAPI GameMain(void* p1)
 }
 
 //--------------------------------------------------------------------------------------
+// キー入力処理
+//--------------------------------------------------------------------------------------
+void InputKeyboard()
+{
+	// キー入力の更新
+	g_pInput->UpdateInput();
+
+	//------------------モデル回転処理S------------------------
+	D3DXMATRIXA16 workRotateMat;
+	D3DXMatrixIdentity( &workRotateMat );
+	if( g_pInput->GetKeyboardPress( DIK_UP ) ) {
+		D3DXMatrixRotationX( &workRotateMat, 0.1f );
+	}
+	if( g_pInput->GetKeyboardPress( DIK_DOWN ) ) {
+		D3DXMatrixRotationX( &workRotateMat, -0.1f );
+	}
+	D3DXMatrixMultiply( &g_MatWorld, &g_MatWorld, &workRotateMat );
+
+	if( g_pInput->GetKeyboardPress( DIK_RIGHT ) ) {
+		D3DXMatrixRotationY( &workRotateMat, 0.1f );
+	}
+	if( g_pInput->GetKeyboardPress( DIK_LEFT ) ) {
+		D3DXMatrixRotationY( &workRotateMat, -0.1f );
+	}
+	D3DXMatrixMultiply( &g_MatWorld, &g_MatWorld, &workRotateMat );	
+	//------------------モデル回転処理E------------------------
+
+	//------------------ライトの強度S------------------------
+	if( g_pInput->GetKeyboardPress( DIK_F1 ) ) {
+		g_fLightIntensity += 0.5f;
+		if( g_fLightIntensity >= 100.0f ) g_fLightIntensity = 100.0f;
+	}
+	if( g_pInput->GetKeyboardPress( DIK_F2 ) ) {
+		g_fLightIntensity -= 0.5f;
+		if( g_fLightIntensity < 0.0f ) g_fLightIntensity = 0.0f;
+	}
+	g_vLightIntensity = D3DXVECTOR4( g_fLightIntensity, g_fLightIntensity, g_fLightIntensity, g_fLightIntensity );
+	g_pEffect->SetVector( "g_vLightIntensity", &g_vLightIntensity );
+	//------------------ライトの強度E------------------------
+
+	//------------------反射率S------------------------
+	if( g_pInput->GetKeyboardPress( DIK_F3 ) ) {
+		g_fReflectivity += 0.1f;
+		if( g_fReflectivity > 10.0f ) g_fReflectivity = 10.0f;
+	}
+	if( g_pInput->GetKeyboardPress( DIK_F4 ) ) {
+		g_fReflectivity -= 0.1f;
+		if( g_fReflectivity < 0.0f ) g_fReflectivity = 0.0f;
+	}
+	g_pEffect->SetFloat( "g_fReflectivity", g_fReflectivity );
+	//------------------反射率E------------------------
+}
+
+//--------------------------------------------------------------------------------------
 // 環境キューブマップのレンダリング
 //--------------------------------------------------------------------------------------
 void RenderSceneIntoCubeMap( IDirect3DDevice9* pd3dDevice, double fTime )
 {
-	HRESULT hr;
-
-	// The projection matrix has a FOV of 90 degrees and asp ratio of 1
+	// プロジェクションの計算
 	D3DXMATRIXA16 mProj;
 	D3DXMatrixPerspectiveFovLH( &mProj, D3DX_PI * 0.5f, 1.0f, 0.01f, 100.0f );
 
@@ -213,15 +242,13 @@ void RenderSceneIntoCubeMap( IDirect3DDevice9* pd3dDevice, double fTime )
 
 			pd3dDevice->Clear( 0L, NULL, D3DCLEAR_ZBUFFER, D3DCOLOR_XRGB( 255, 0, 0 ), 1.0f, 0L );
 
-			// Begin the scene
 			if( SUCCEEDED( pd3dDevice->BeginScene() ) ) {
 				RenderScene( pd3dDevice, &mView, &mProj, &g_pTech, false, fTime );
-				// End the scene.
 				pd3dDevice->EndScene();
 			}
 		}
 
-	// Restore depth-stencil buffer and render target
+	// サーフェスのリストア
 	if( pDSOld ) {
 		pd3dDevice->SetDepthStencilSurface( pDSOld );
 		SAFE_RELEASE( pDSOld );
@@ -233,26 +260,24 @@ void RenderSceneIntoCubeMap( IDirect3DDevice9* pd3dDevice, double fTime )
 }
 
 //--------------------------------------------------------------------------------------
-// Renders the scene with a specific view and projection matrix.
+// シーンのレンダリング
 //--------------------------------------------------------------------------------------
 void RenderScene( IDirect3DDevice9* pd3dDevice, const D3DXMATRIX* pmView, const D3DXMATRIX* pmProj,
 	CTechniqueGroup* pTechGroup, bool bRenderEnvMappedMesh, double fTime )
 {
-	HRESULT hr;
-	UINT p, cPass;
 	D3DXMATRIXA16 mWorldView;
 
 	g_pEffect->SetMatrix( "g_mProj", pmProj );
 
-	// Write camera-space light positions to effect
+	// ライトの計算
 	D3DXVECTOR4 avLightPosView[NUM_LIGHTS];
 	for( int i = 0; i < NUM_LIGHTS; ++i ) {
-		// Animate the lights
-		float fDisp = ( 1.0f + cosf( fmodf( ( float ) fTime, D3DX_PI ) ) ) * 0.5f * g_aLights[i].fMoveDist; // Distance to move
-		D3DXVECTOR4 vMove = g_aLights[i].vMoveDir * fDisp;  // In vector form
-		D3DXMatrixTranslation( &g_aLights[i].mWorking, vMove.x, vMove.y, vMove.z ); // Matrix form
+		// ライトの移動を計算
+		float fDisp = ( 1.0f + cosf( fmodf( ( float ) fTime, D3DX_PI ) ) ) * 0.5f * g_aLights[i].fMoveDist;
+		D3DXVECTOR4 vMove = g_aLights[i].vMoveDir * fDisp;
+		D3DXMatrixTranslation( &g_aLights[i].mWorking, vMove.x, vMove.y, vMove.z );
 		D3DXMatrixMultiply( &g_aLights[i].mWorking, &g_aLights[i].mWorld, &g_aLights[i].mWorking );
-		vMove += g_aLights[i].vPos;  // Animated world coordinates
+		vMove += g_aLights[i].vPos;
 		D3DXVec4Transform( &avLightPosView[i], &vMove, pmView );
 	}
 	g_pEffect->SetVectorArray( "g_vLightPosView", avLightPosView, NUM_LIGHTS );
@@ -260,27 +285,22 @@ void RenderScene( IDirect3DDevice9* pd3dDevice, const D3DXMATRIX* pmView, const 
 	// Xfileを描画
 	auto work = g_pXfile.begin();
 	if( bRenderEnvMappedMesh ) {
-		//g_pEffect->SetTechnique( "RenderHDREnvMap" );
-
 		D3DXMatrixMultiply( &mWorldView, &g_MatWorld, &g_MatView );
 		D3DXMatrixMultiply( &mWorldView, &mWorldView, pmView );
 		g_pEffect->SetMatrix( "g_mWorldView", &mWorldView );
-
 		g_pEffect->SetTexture( "g_txCubeMap", g_apCubeMap );
-
-		//work++;
 		(*work)->Draw( g_pEffect,"RenderHDREnvMap" );
-		
 	}
 	
 	// 部屋を描画
-	//g_pEffect->SetTechnique( "RenderScene" );
 	g_pEffect->SetMatrix( "g_mWorldView", pmView );
-	
 	work++;
 	(*work)->Draw( g_pEffect,"RenderScene" );
 }
 
+//--------------------------------------------------------------------------------------
+// キューブマップ作成のための6方向からのカメラ視点
+//--------------------------------------------------------------------------------------
 D3DXMATRIX GetCubeMapViewMatrix( DWORD dwFace )
 {
 	D3DXVECTOR3 vEyePt = D3DXVECTOR3( 0.0f, 0.0f, 0.0f );
@@ -314,7 +334,6 @@ D3DXMATRIX GetCubeMapViewMatrix( DWORD dwFace )
 			break;
 	}
 
-	// Set the view transform for this cubemap surface
 	D3DXMATRIXA16 mView;
 	D3DXMatrixLookAtLH( &mView, &vEyePt, &vLookDir, &vUpDir );
 	return mView;
@@ -402,9 +421,6 @@ bool GameInit(HINSTANCE hinst,HWND hwnd,int width,int height){
 	// 入力クラス作成
 	g_pInput = std::make_shared<CInput>( hinst, hwnd );
 
-	// テクスチャマネージャ作成
-	g_pTextureManager = std::make_shared<CTextureManager>( g_DXGrobj.GetDXDevice( ) );
-
 	// xfileの作成
 	for( const auto& filename : xFileName ) {
 		g_pXfile.push_back( std::make_shared<CDirect3DXFile>() );
@@ -421,7 +437,6 @@ bool GameInit(HINSTANCE hinst,HWND hwnd,int width,int height){
 	}	
 
 	// ライトの設定
-	// Set the light positions
 	g_aLights[0].vPos = D3DXVECTOR4( -3.5f, 2.3f, -4.0f, 1.0f );
 	g_aLights[0].vMoveDir = D3DXVECTOR4( 0.0f, 0.0f, 1.0f, 0.0f );
 	g_aLights[0].fMoveDist = 8.0f;
@@ -438,13 +453,12 @@ bool GameInit(HINSTANCE hinst,HWND hwnd,int width,int height){
 	g_aLights[3].vMoveDir = D3DXVECTOR4( -1.0f, 0.0f, 0.0f, 0.0f );
 	g_aLights[3].fMoveDist = 7.0f;
 
-	g_vLightIntensity = D3DXVECTOR4( 24.0f, 24.0f, 24.0f, 24.0f );
-	g_fReflectivity = 0.4f;
+	g_fLightIntensity = 24.0f;
+	g_vLightIntensity = D3DXVECTOR4( g_fLightIntensity, g_fLightIntensity, g_fLightIntensity, g_fLightIntensity );
+	g_fReflectivity = 1.0f;
 
-	// Initialize reflectivity
 	g_pEffect->SetFloat( "g_fReflectivity", g_fReflectivity );
 
-	// Initialize light intensity
 	g_pEffect->SetVector( "g_vLightIntensity", &g_vLightIntensity );
 
 	D3DXMATRIXA16 mWorld, m;
@@ -455,7 +469,7 @@ bool GameInit(HINSTANCE hinst,HWND hwnd,int width,int height){
 		D3DXMatrixMultiply( &g_aLights[i].mWorld, &mWorld, &m );
 	}
 
-	// 髑髏のワールド座標設定
+	// モデルのワールド座標設定
 	D3DXMatrixIdentity( &g_MatWorld );
 	g_DXGrobj.GetDXDevice()->SetTransform( D3DTS_WORLD, &g_MatWorld );
 	g_MatWorld._11 = g_MatWorld._22 = g_MatWorld._33 = 1.0f;

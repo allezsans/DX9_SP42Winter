@@ -5,7 +5,6 @@
 #include <memory>
 #include <list>
 #include "CDirectXGraphics.h" 
-#include "CTextureManager.h"
 #include "CInput.h"
 #include "CDirect3DXFile.h"
 #include "CFont.h"
@@ -69,6 +68,7 @@ void RenderSceneIntoCubeMap( IDirect3DDevice9* pd3dDevice, double fTime );
 void RenderScene( IDirect3DDevice9* pd3dDevice, const D3DXMATRIX* pmView, const D3DXMATRIX* pmProj,
 	CTechniqueGroup* pTechGroup, bool bRenderEnvMappedMesh, double fTime );
 D3DXMATRIX GetCubeMapViewMatrix( DWORD dwFace );
+void InputKeyboard();
 
 #ifdef _MAIN_MODULE_
 #define GLOBAL
@@ -95,9 +95,9 @@ GLOBAL CDirectXGraphics	g_DXGrobj;								// ‚c‚h‚q‚d‚b‚s‚w@‚f‚q‚`‚o‚g‚h‚b‚r@ƒ
 GLOBAL LPD3DXEFFECT		g_pEffect = nullptr;					// ƒGƒtƒFƒNƒgƒIƒuƒWƒFƒNƒg
 GLOBAL std::list<std::shared_ptr<CDirect3DXFile>>		g_pXfile;	// Xƒtƒ@ƒCƒ‹ƒ}ƒl[ƒWƒƒ
 GLOBAL std::shared_ptr<CInput>				g_pInput;				// “ü—ÍƒNƒ‰ƒX
-GLOBAL std::shared_ptr<CTextureManager>	g_pTextureManager;		// ƒeƒNƒXƒ`ƒƒƒ}ƒl[ƒWƒƒ
 GLOBAL CLight g_aLights[NUM_LIGHTS];     // ƒ‰ƒCƒg‚Ì”
 GLOBAL D3DXVECTOR4 g_vLightIntensity;
+GLOBAL float g_fLightIntensity;
 GLOBAL IDirect3DSurface9*	g_pDepthCube;
 GLOBAL IDirect3DCubeTexture9*          g_apCubeMap;
 GLOBAL float g_fReflectivity;
