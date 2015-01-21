@@ -16,20 +16,20 @@ CInfo::CInfo()
 	m_pTitle = std::make_shared<CFont>();
 	m_pTitle->Load( ( fontPath + "ASCII.txt" ).c_str() );
 	m_pTitle->Load( ( fontPath + "文字データ.txt" ).c_str() );
-	m_pTitle->CreateTexture( 64, "S2GP殴り書き", ( fontPath + "nagurip.ttf" ).c_str() );
+	m_pTitle->CreateTexture( 64, "しねきゃぷしょん", ( fontPath + "cinecaption227.ttf" ).c_str() );
 	SetTitle( "SP42冬季シェーダー課題" );
 
 	// 変数情報
 	m_pVarInfo = std::make_shared<CFont>();
 	m_pVarInfo->Load( ( fontPath + "ASCII.txt" ).c_str() );
 	m_pVarInfo->Load( ( fontPath + "文字データ.txt" ).c_str() );
-	m_pVarInfo->CreateTexture( 32, "S2GP殴り書き", ( fontPath + "nagurip.ttf" ).c_str() );
+	m_pVarInfo->CreateTexture( 32, "しねきゃぷしょん", ( fontPath + "cinecaption227.ttf" ).c_str() );
 
 	// デバイス情報の初期化
 	m_pDeviceInfo = std::make_shared<CMenu>();
 	m_pDeviceInfo->Load( ( fontPath + "ASCII.txt" ).c_str() );
 	m_pDeviceInfo->Load( ( fontPath + "文字データ.txt" ).c_str() );
-	m_pDeviceInfo->CreateTexture( 32, "S2GP殴り書き", ( fontPath + "nagurip.ttf" ).c_str() );
+	m_pDeviceInfo->CreateTexture( 32, "しねきゃぷしょん", ( fontPath + "cinecaption227.ttf" ).c_str() );
 	m_pDeviceInfo->SetPitch( 10.0f );
 	m_pDeviceInfo->SetPosition( 10, 100 );
 	SetDeviceInfo();
@@ -38,7 +38,7 @@ CInfo::CInfo()
 	m_pUserGuide = std::make_shared<CMenu>();
 	m_pUserGuide->Load( ( fontPath + "ASCII.txt" ).c_str() );
 	m_pUserGuide->Load( ( fontPath + "文字データ.txt" ).c_str() );
-	m_pUserGuide->CreateTexture( 32, "S2GP殴り書き", ( fontPath + "nagurip.ttf" ).c_str() );
+	m_pUserGuide->CreateTexture( 32, "しねきゃぷしょん", ( fontPath + "cinecaption227.ttf" ).c_str() );
 	m_pUserGuide->SetPitch( 20.0f );
 	m_pUserGuide->SetPosition( 10, 400 );
 	SetUserGuide();
@@ -109,6 +109,7 @@ void CInfo::SetUserGuide()
 	m_pUserGuide->PushMenu( "↑↓：上下回転" );	
 	m_pUserGuide->PushMenu( "F1F2：ライトの強度" );
 	m_pUserGuide->PushMenu( "F3F4：キューブマップの反射率" );
+	m_pUserGuide->PushMenu( "F5：モデルの変更" );
 }
 
 //======================================================

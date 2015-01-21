@@ -120,10 +120,12 @@ float4 HDRPixScene( float2 Tex : TEXCOORD0,
         float3 vRLightVec = (float3)(g_vLightPosView[LightIndex] - Pos);
 
         // ライトベクトルと法線からピクセルを計算
-        float fDiffuse = saturate( dot( normalize( vRLightVec ), N ) );
+        //float fDiffuse = saturate( dot( normalize( vRLightVec ), N ) );
+        float fDiffuse = dot( normalize( vRLightVec ), N );
 
         // ライトの強度を計算
-        float fAttenuation = saturate( 1.0f / dot( vRLightVec, vRLightVec ) );
+        //float fAttenuation = saturate( 1.0f / dot( vRLightVec, vRLightVec ) );
+        float fAttenuation = 1.0f / dot( vRLightVec, vRLightVec );
 
         // ピクセルに反映
         vPixValue += fDiffuse * fAttenuation;

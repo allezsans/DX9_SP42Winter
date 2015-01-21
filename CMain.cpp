@@ -198,6 +198,13 @@ void InputKeyboard()
 	}
 	g_pEffect->SetFloat( "g_fReflectivity", g_fReflectivity );
 	//------------------反射率E------------------------
+
+	//------------------モデルの変更S------------------------
+	if( g_pInput->GetKeyboardTrigger( DIK_F5 ) ) {
+		g_nowModel++;
+		g_nowModel = g_nowModel % 2;
+	}
+	//------------------モデルの変更S------------------------
 }
 
 //--------------------------------------------------------------------------------------
@@ -283,6 +290,10 @@ void RenderScene( IDirect3DDevice9* pd3dDevice, const D3DXMATRIX* pmView, const 
 
 	// Xfileを描画
 	auto work = g_pXfile.begin();
+	if( g_nowModel == 1 ) {
+		++work;
+	}
+
 	if( bRenderEnvMappedMesh ) {
 		D3DXMatrixMultiply( &mWorldView, &g_MatWorld, &g_MatView );
 		D3DXMatrixMultiply( &mWorldView, &mWorldView, pmView );
@@ -291,9 +302,13 @@ void RenderScene( IDirect3DDevice9* pd3dDevice, const D3DXMATRIX* pmView, const 
 		(*work)->Draw( g_pEffect,"RenderHDREnvMap" );
 	}
 	
+	if( g_nowModel == 0 ) {
+		++work;
+	}
+
 	// 部屋を描画
 	g_pEffect->SetMatrix( "g_mWorldView", pmView );
-	work++;
+	++work;
 	(*work)->Draw( g_pEffect,"RenderScene" );
 }
 
@@ -385,7 +400,7 @@ bool GameInit(HINSTANCE hinst,HWND hwnd,int width,int height){
 
 	// カメラ変換行列作成
 	D3DXMatrixLookAtLH(&g_MatView,
-						&D3DXVECTOR3( 0.0f, 0.0f, -2.0f ),  // 視点
+						&D3DXVECTOR3( 0.0f, 0.0f, -3.0f ),  // 視点
 						&D3DXVECTOR3(0.0f,0.0f,0.0f),		// 注視点
 						&D3DXVECTOR3(0.0f,1.0f,0.0f));		// 上向き
 
@@ -434,6 +449,7 @@ bool GameInit(HINSTANCE hinst,HWND hwnd,int width,int height){
 		}
 		++no;
 	}	
+	g_nowModel = 0;
 
 	// ライトの設定
 	g_aLights[0].vPos = D3DXVECTOR4( -3.5f, 2.3f, -4.0f, 1.0f );
@@ -471,7 +487,7 @@ bool GameInit(HINSTANCE hinst,HWND hwnd,int width,int height){
 	// モデルのワールド座標設定
 	D3DXMatrixIdentity( &g_MatWorld );
 	g_DXGrobj.GetDXDevice()->SetTransform( D3DTS_WORLD, &g_MatWorld );
-	g_MatWorld._11 = g_MatWorld._22 = g_MatWorld._33 = 1.0f;
+	g_MatWorld._11 = g_MatWorld._22 = g_MatWorld._33 = 0.5f;
 	
 	// キューブマップの作成
 	hr = g_DXGrobj.GetDXDevice()->CreateCubeTexture( 

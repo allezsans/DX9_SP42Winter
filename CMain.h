@@ -82,11 +82,10 @@ GLOBAL std::shared_ptr<C2DPolygon> m_pPETexture;		// 2Dポリゴン表示クラス
 const std::string  modelPath = "resource/model/";
 // モデルファイルパス
 const std::string xFileName[] = {
-	//"skullocc.x",
+	"skullocc.x",
 	"maid_pose.x",
 	"room.x",
 };
-
 
 // グローバル変数
 GLOBAL CDirectXGraphics	g_DXGrobj;								// ＤＩＲＥＣＴＸ　ＧＲＡＰＨＩＣＳ　オブジェクト		
@@ -99,6 +98,7 @@ GLOBAL float g_fLightIntensity;
 GLOBAL IDirect3DSurface9*	g_pDepthCube;
 GLOBAL IDirect3DCubeTexture9*          g_apCubeMap;
 GLOBAL float g_fReflectivity;
+GLOBAL int g_nowModel;
 
 // 3D描画用の行列
 GLOBAL D3DXMATRIX	g_MatView;				// カメラ行列
